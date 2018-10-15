@@ -15,7 +15,7 @@ class Brinquedo {
   quanto maior a pontuaçao e menor a duracao, melhor
   */
   calculaDiv() {
-    return this.pontuacao / this.duracao;
+    return parseFloat(this.pontuacao / this.duracao);
   }
 }
 
@@ -24,9 +24,12 @@ class App extends Component {
     super(props);
 
     this.state = {
+      brinquedosEscolhidos: [],
       quantidade: "",
       tempo: "",
-      showComponent: false
+      showComponent: false,
+      pontuacaoMaxima: "",
+      showResult: false
     };
 
     this.showValue = this.showValue.bind(this);
@@ -42,6 +45,12 @@ class App extends Component {
   showComponentOnClick() {
     this.setState({
       showComponent: true
+    });
+  }
+
+  showResultOnClick() {
+    this.setState({
+      showResult: true
     });
   }
 
@@ -70,56 +79,10 @@ class App extends Component {
     return inputs;
   }
 
-  // algorithm() {
-  //   var numeroTotalBrinquedos = 1,
-  //     tempoTotalEquipe = 1,
-  //     instancias = 1;
-
-  //     var brinquedos = new Array();
-
-  //     numeroTotalBrinquedos = this.state.quantidade;
-  //     tempoTotalEquipe = this.state.tempo;
-
-  //     if (numeroTotalBrinquedos == 0) {
-  //       alert("N nao pode ser 0!");
-  //       break;
-  //     }
-
-  //     for (var i = 0; i < numeroTotalBrinquedos; i++) {
-  //       var b = new Brinquedo();
-  //       b.duracao = rls.questionInt(`Insira a duração do brinquedo ${i}: `);
-  //       b.pontuacao = rls.questionInt(`Insira a pontuação do brinquedo ${i}: `);
-  //       brinquedos.push(b);
-  //     }
-
-  //     brinquedos.sort((a, b) => b.div > a.div);
-
-  //     console.log("Brinquedos inseridos:", brinquedos);
-
-  //     var pontuacaoTotal = 0,
-  //       tempoTotal = 0;
-  //     var k = 0;
-  //     var escolhidos = Array();
-  //     while (k < numeroTotalBrinquedos) {
-  //       var auxTempoTotal = tempoTotal + brinquedos[k].duracao;
-  //       if (auxTempoTotal <= tempoTotalEquipe) {
-  //         pontuacaoTotal += brinquedos[k].pontuacao;
-  //         tempoTotal = auxTempoTotal;
-  //         escolhidos.push(brinquedos[k]);
-  //       } else k++;
-  //     }
-
-  //     console.log("Brinquedos escolhidos: \n", escolhidos);
-  //     console.log(`Instancia:${instancias++}`);
-  //     console.log(pontuacaoTotal);
-  //     console.log("\n\n");
-  //   }
-
   algorithm() {
     var numeroTotalBrinquedos = 0,
       tempoTotalEquipe = 1,
       instancias = 1;
-
     var brinquedos = new Array();
 
     numeroTotalBrinquedos = this.state.quantidade;
@@ -130,14 +93,62 @@ class App extends Component {
       return;
     }
 
+    console.log(numeroTotalBrinquedos);
     for (var i = 0; i < numeroTotalBrinquedos; i++) {
       var b = new Brinquedo();
       b.nome = document.getElementById(`nomeBrinquedo${i}`).value;
-      b.duracao = document.getElementById(`duracaoBrinquedo${i}`).value;
-      b.pontuacao = document.getElementById(`pontuacaoBrinquedo${i}`).value;
+      b.duracao = parseInt(
+        document.getElementById(`duracaoBrinquedo${i}`).value
+      );
+      b.pontuacao = parseInt(
+        document.getElementById(`pontuacaoBrinquedo${i}`).value
+      );
       brinquedos.push(b);
     }
-    console.log(brinquedos);
+
+    brinquedos.sort((a, b) => b.div > a.div);
+
+    var pontuacaoTotal = 0;
+    var tempoTotal = 0;
+    var k = 0;
+
+    var escolhidos = new Array();
+
+    while (k < numeroTotalBrinquedos) {
+      var auxTempoTotal = tempoTotal + brinquedos[k].duracao;
+      console.log("auxtempo", auxTempoTotal);
+      console.log("tempototal", tempoTotal);
+      if (auxTempoTotal <= tempoTotalEquipe) {
+        pontuacaoTotal += brinquedos[k].pontuacao;
+        tempoTotal = auxTempoTotal;
+        escolhidos.push(brinquedos[k]);
+      } else {
+        k++;
+      }
+    }
+
+    console.log("Brinquedos escolhidos: \n", escolhidos);
+    console.log("Pontuacao total", pontuacaoTotal);
+
+    this.state.brinquedosEscolhidos = escolhidos;
+    console.log("brinkedo", this.state.brinquedosEscolhidos);
+  }
+
+  renderResult(escolhidos) {
+    console.log("escolhidos", escolhidos);
+    const inputs = [];
+    console.log(escolhidos.length);
+    console.log(escolhidos[0].nome);
+    var listaBrinquedos = [];
+    for (var j = 0; j < escolhidos.length; j++) {
+      inputs.push(
+        <div key={j}>
+          <span> {escolhidos[j].nome}</span>
+        </div>
+      );
+    }
+    console.log(listaBrinquedos);
+    return inputs;
   }
 
   render() {
@@ -150,8 +161,8 @@ class App extends Component {
           id="name"
           onChange={e => {
             this.setState({ quantidade: e.target.value });
-            this.showComponentOnClick();
             this.renderForm();
+            this.showComponentOnClick();
           }}
         />
         <p />
@@ -172,7 +183,22 @@ class App extends Component {
         </div>
         <p />
         <div>
-          <button onClick={this.algorithm}>Confirmar</button>
+          <button
+            onClick={() => {
+              this.algorithm();
+              this.showResultOnClick();
+            }}
+          >
+            Confirmar
+          </button>
+        </div>
+        <div>
+          {this.state.showResult ? (
+            <div>
+              <span>Você deverá escolher os seguintes brinquedos:</span>
+              <span>{this.renderResult(this.state.brinquedosEscolhidos)}</span>
+            </div>
+          ) : null}
         </div>
       </div>
     );
